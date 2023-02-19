@@ -1,4 +1,4 @@
-const PROGRAM_START_ADDRESS: u16 =0x200;
+const PROGRAM_START_ADDRESS: u16 = 0x200;
 
 const MEM_SIZE: usize = 4096;
 const NUM_REGS: usize = 16;
@@ -36,7 +36,20 @@ impl Default for Chip8 {
 }
 
 impl Chip8 {
-    pub fn load_program(self: Chip8) {
-        todo!()
+    pub fn load_program(&mut self, program: &[u8]) {
+        let start = PROGRAM_START_ADDRESS as usize;
+        let end = start + program.len();
+        self.memory[start..end].copy_from_slice(program);
     }
+}
+
+#[test]
+fn test_load_program() {
+    let program = vec![1, 2, 3, 4, 5, 6, 7];
+    let mut chip_8 = Chip8::default();
+    chip_8.load_program(&program);
+
+    let start = PROGRAM_START_ADDRESS as usize;
+    let end = start + program.len();
+    assert_eq!(program, chip_8.memory[start..end]);
 }
