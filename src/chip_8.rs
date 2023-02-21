@@ -38,6 +38,7 @@ impl Default for Chip8 {
 }
 
 impl Chip8 {
+    #[allow(dead_code)]
     pub fn load_program(&mut self, program: &[u8]) {
         let start = PROGRAM_START_ADDRESS as usize;
         let end = start + program.len();
@@ -45,6 +46,7 @@ impl Chip8 {
         println!("program loaded");
     }
 
+    #[allow(dead_code)]
     // todo(fedejinich) add unit test for this
     pub fn tick(&mut self) {
         let op = self.fetch_op();
@@ -64,16 +66,18 @@ impl Chip8 {
     // todo(fedejinich) add unit test for this
     // decodes the given opcode and executes it
     fn execute_op(&mut self, op: u16) {
-        let d1 = (op & 0xF000) >> 12;
-        let d2 = (op & 0x0F00) >> 8;
-        let d3 = (op & 0x00F0) >> 4;
-        let d4 = op & 0x000F;
+        let n1 = (op & 0xF000) >> 12;
+        let n2 = (op & 0x0F00) >> 8;
+        let n3 = (op & 0x00F0) >> 4;
+        let n4 = op & 0x000F;
 
         // decode and execute opcode
-        let result: OpcodeExec = match (d1, d2, d3, d4) {
-            (0x0, d2, d3, d4) => self.opcode_sys(d2, d3, d4), // SYS addr
-            (0x0, 0x0, 0xE, 0x0) => self.opcode_cls(),        // CLS
-            (0x0, 0x0, 0xE, 0xE) => self.opcode_ret(),        // RET
+        let result: OpcodeExec = match (n1, n2, n3, n4) {
+            // (0x0, _, _, _) => self.opcode_sys(self.nnn_address(op)), // SYS addr
+            (0x0, 0x0, 0xE, 0x0) => self.opcode_cls(), // CLS
+            (0x0, 0x0, 0xE, 0xE) => self.opcode_ret(), // RET
+            (0x1, _, _, _) => self.opcode_jmp(self.nnn_address(op)), // JP addr
+            (0x2, _, _, _) => self.opcode_call(self.nnn_address(op)), // CALL addr
             (_, _, _, _) => Err(format!("Unimplemented opcode: {}", op)),
         };
 
@@ -88,14 +92,47 @@ impl Chip8 {
         println!("Opcode executed: {}", result.unwrap());
     }
 
-    fn nnn_address(&self, n1: u16, n2: u16, n3: u16) -> u16 {
-        (n1 << 8) | (n2 << 4) | n3
+    fn nnn_address(&self, op: u16) -> u16 {
+        op & 0xFFF
+    }
+
+    fn push(&mut self, elem: u16) {
+        // todo(fedejinich) no error handling, what happens when we reach the limit?
+        self.stack[self.stack_pointer as usize] = elem;
+        self.stack_pointer += 1;
+    }
+
+    fn pop(&mut self) -> u16 {
+        // todo(fedejinich) no error handling, what happens when there's nothing left?
+        self.stack_pointer -= 1;
+        self.increase_stack_pointer();
+        self.stack[self.stack_pointer as usize]
+    }
+
+    fn set_pc(&mut self, pc: u16) {
+        // todo(fedejinich) no error handling, should restrict pc to fit in memory range?
+        self.pc = pc;
+    }
+
+    fn increase_program_counter(&mut self) {
+        self.pc += 1;
+    }
+
+    fn decrease_program_counter(&mut self) {
+        self.pc -= 1;
+    }
+
+    fn increase_stack_pointer(&mut self) {
+        self.stack_pointer += 1;
+    }
+
+    fn decrease_stack_pointer(&mut self) {
+        self.stack_pointer -= 1;
     }
 
     // Jump to a machine code routine at nnn.
     // This instruction is only used on the old computers on which Chip-8 was originally implemented. It is ignored by modern interpreters.
-    fn opcode_sys(&self, d2: u16, d3: u16, d4: u16) -> OpcodeExec {
-        let addr = self.nnn_address(d2, d3, d4);
+    fn opcode_sys(&self, nnn: u16) -> OpcodeExec {
         Ok(String::from("SYS"))
     }
 
@@ -108,9 +145,24 @@ impl Chip8 {
     // Return from a subroutine.
     // The interpreter sets the program counter to the address at the top of the stack, then subtracts 1 from the stack pointer.
     fn opcode_ret(&mut self) -> OpcodeExec {
-        self.pc = self.stack[self.stack_pointer as usize];
-        self.stack_pointer -= 1;
+        let new_pc = self.pop();
+        self.set_pc(new_pc);
         Ok(String::from("RET"))
+    }
+
+    // Jump to location nnn.
+    // The interpreter sets the program counter to nnn.
+    fn opcode_jmp(&mut self, nnn: u16) -> OpcodeExec {
+        self.set_pc(nnn);
+        Ok(format!("JMP {}", nnn))
+    }
+
+    // Call subroutine at nnn.
+    // The interpreter increments the stack pointer, then puts the current PC on the top of the stack. The PC is then set to nnn.
+    fn opcode_call(&mut self, nnn: u16) -> OpcodeExec {
+        self.push(self.pc);
+        self.set_pc(nnn);
+        Ok(format!("CALL {}", nnn))
     }
 }
 
