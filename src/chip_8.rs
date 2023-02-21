@@ -1,7 +1,3 @@
-enum Opcode {
-    SYS(u16),
-}
-
 type OpcodeExec = Result<String, String>;
 
 const PROGRAM_START_ADDRESS: u16 = 0x200;
@@ -77,6 +73,7 @@ impl Chip8 {
         let result: OpcodeExec = match (d1, d2, d3, d4) {
             (0x0, d2, d3, d4) => self.opcode_sys(d2, d3, d4), // SYS addr
             (0x0, 0x0, 0xE, 0x0) => self.opcode_cls(),        // CLS
+            (0x0, 0x0, 0xE, 0xE) => self.opcode_ret(),        // RET
             (_, _, _, _) => Err(format!("Unimplemented opcode: {}", op)),
         };
 
@@ -91,14 +88,29 @@ impl Chip8 {
         println!("Opcode executed: {}", result.unwrap());
     }
 
-    fn opcode_sys(&self, d2: u16, d3: u16, d4: u16) -> OpcodeExec {
-        let addr = (d2 << 8) | (d3 << 4) | d4;
-        todo!()
+    fn nnn_address(&self, n1: u16, n2: u16, n3: u16) -> u16 {
+        (n1 << 8) | (n2 << 4) | n3
     }
 
+    // Jump to a machine code routine at nnn.
+    // This instruction is only used on the old computers on which Chip-8 was originally implemented. It is ignored by modern interpreters.
+    fn opcode_sys(&self, d2: u16, d3: u16, d4: u16) -> OpcodeExec {
+        let addr = self.nnn_address(d2, d3, d4);
+        Ok(String::from("SYS"))
+    }
+
+    // Clear the display
     fn opcode_cls(&mut self) -> OpcodeExec {
         self.display = [false; SCREEN_WIDTH * SCREEN_HEIGTH];
         Ok(String::from("CLS"))
+    }
+
+    // Return from a subroutine.
+    // The interpreter sets the program counter to the address at the top of the stack, then subtracts 1 from the stack pointer.
+    fn opcode_ret(&mut self) -> OpcodeExec {
+        self.pc = self.stack[self.stack_pointer as usize];
+        self.stack_pointer -= 1;
+        Ok(String::from("RET"))
     }
 }
 
