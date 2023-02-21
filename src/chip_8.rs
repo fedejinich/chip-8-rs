@@ -1,3 +1,5 @@
+enum Opcode {}
+
 const PROGRAM_START_ADDRESS: u16 = 0x200;
 
 const MEM_SIZE: usize = 4096;
@@ -40,6 +42,16 @@ impl Chip8 {
         let start = PROGRAM_START_ADDRESS as usize;
         let end = start + program.len();
         self.memory[start..end].copy_from_slice(program);
+        println!("program loaded");
+    }
+    pub fn tick(&mut self) {
+        let op = self.fetch_op();
+        self.pc += 1;
+        // self.execute(op);
+        println!("tick")
+    }
+    fn fetch_op(&self) -> Opcode {
+        todo!()
     }
 }
 
