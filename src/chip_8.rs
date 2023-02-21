@@ -46,12 +46,27 @@ impl Chip8 {
     }
     pub fn tick(&mut self) {
         let op = self.fetch_op();
-        self.pc += 1;
+        self.pc += 2;
         // self.execute(op);
         println!("tick")
     }
+
+    // fetches the 16-bit opcode stored in memory at the program counter
     fn fetch_op(&self) -> Opcode {
-        todo!()
+        let high = self.memory[self.pc as usize] as u16;
+        let low = self.memory[(self.pc as usize) + 1] as u16;
+        let op = (high >> 8) | low;
+        parse_op(&op)
+    }
+    fn parse_op(&self, op: u16) -> Opcode {
+        let d1 = (op & 0xF000) >> 12;
+        let d2 = (op & 0x0F00) >> 8;
+        let d3 = (op & 0x00F0) >> 4;
+        let d4 = op & 0x000F;
+
+        match (d1, d2, d3, d4) {
+            (_, _, _, _) => unimplemented!("Unimplemented opcode: {}", op),
+        }
     }
 }
 
