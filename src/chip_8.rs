@@ -1,4 +1,8 @@
-enum Opcode {}
+enum Opcode {
+    SYS(u16),
+}
+
+type OpcodeExec = Result<String, String>;
 
 const PROGRAM_START_ADDRESS: u16 = 0x200;
 
@@ -44,29 +48,57 @@ impl Chip8 {
         self.memory[start..end].copy_from_slice(program);
         println!("program loaded");
     }
+
+    // todo(fedejinich) add unit test for this
     pub fn tick(&mut self) {
         let op = self.fetch_op();
-        self.pc += 2;
-        // self.execute(op);
+        self.execute_op(op);
         println!("tick")
     }
 
+    // todo(fedejinich) add unit test for this
     // fetches the 16-bit opcode stored in memory at the program counter
-    fn fetch_op(&self) -> Opcode {
+    fn fetch_op(&self) -> u16 {
         let high = self.memory[self.pc as usize] as u16;
         let low = self.memory[(self.pc as usize) + 1] as u16;
         let op = (high >> 8) | low;
-        parse_op(&op)
+        op
     }
-    fn parse_op(&self, op: u16) -> Opcode {
+
+    // todo(fedejinich) add unit test for this
+    // decodes the given opcode and executes it
+    fn execute_op(&mut self, op: u16) {
         let d1 = (op & 0xF000) >> 12;
         let d2 = (op & 0x0F00) >> 8;
         let d3 = (op & 0x00F0) >> 4;
         let d4 = op & 0x000F;
 
-        match (d1, d2, d3, d4) {
-            (_, _, _, _) => unimplemented!("Unimplemented opcode: {}", op),
+        // decode and execute opcode
+        let result: OpcodeExec = match (d1, d2, d3, d4) {
+            (0x0, d2, d3, d4) => self.opcode_sys(d2, d3, d4), // SYS addr
+            (0x0, 0x0, 0xE, 0x0) => self.opcode_cls(),        // CLS
+            (_, _, _, _) => Err(format!("Unimplemented opcode: {}", op)),
+        };
+
+        if (&result).is_err() {
+            println!("Opcode execution error: {}", result.unwrap_err());
+            return;
         }
+
+        // advance program counter
+        self.pc += 2;
+
+        println!("Opcode executed: {}", result.unwrap());
+    }
+
+    fn opcode_sys(&self, d2: u16, d3: u16, d4: u16) -> OpcodeExec {
+        let addr = (d2 << 8) | (d3 << 4) | d4;
+        todo!()
+    }
+
+    fn opcode_cls(&mut self) -> OpcodeExec {
+        self.display = [false; SCREEN_WIDTH * SCREEN_HEIGTH];
+        Ok(String::from("CLS"))
     }
 }
 
