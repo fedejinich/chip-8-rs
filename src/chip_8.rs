@@ -79,6 +79,7 @@ impl Chip8 {
             (0x1, _, _, _) => self.opcode_jmp(self.nnn_address(op)), // JP addr
             (0x2, _, _, _) => self.opcode_call(self.nnn_address(op)), // CALL addr
             (0x3, _, _, _) => self.opcode_se(n2 as usize, self.kk(op)), // SE Vx, byte
+            (0x4, _, _, _) => self.opcode_sne(n2 as usize, self.kk(op)), // SNE Vx, byte
             (_, _, _, _) => Err(format!("Unimplemented opcode: {}", op)),
         };
 
@@ -131,7 +132,7 @@ impl Chip8 {
 
     // Jump to a machine code routine at nnn.
     // This instruction is only used on the old computers on which Chip-8 was originally implemented. It is ignored by modern interpreters.
-    fn opcode_sys(&self, nnn: u16) -> OpcodeExec {
+    fn opcode_sys(&self, _nnn: u16) -> OpcodeExec {
         Ok(String::from("SYS"))
     }
 
@@ -169,6 +170,13 @@ impl Chip8 {
             self.increase_program_counter();
         }
         Ok(format!("SE v{}, {}", x, kk))
+    }
+
+    fn opcode_sne(&mut self, x: usize, kk: u8) -> OpcodeExec {
+        if self.v_reg[x] != kk {
+            self.increase_program_counter();
+        }
+        Ok(format!("SNE v{}, {}", x, kk))
     }
 }
 
