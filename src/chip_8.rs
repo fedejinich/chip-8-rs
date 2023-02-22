@@ -73,11 +73,12 @@ impl Chip8 {
 
         // decode and execute opcode
         let result: OpcodeExec = match (n1, n2, n3, n4) {
-            // (0x0, _, _, _) => self.opcode_sys(self.nnn_address(op)), // SYS addr
             (0x0, 0x0, 0xE, 0x0) => self.opcode_cls(), // CLS
             (0x0, 0x0, 0xE, 0xE) => self.opcode_ret(), // RET
+            (0x0, _, _, _) => self.opcode_sys(self.nnn_address(op)), // SYS addr
             (0x1, _, _, _) => self.opcode_jmp(self.nnn_address(op)), // JP addr
             (0x2, _, _, _) => self.opcode_call(self.nnn_address(op)), // CALL addr
+            (0x3, _, _, _) => self.opcode_se(n2 as usize, self.kk(op)), // SE Vx, byte
             (_, _, _, _) => Err(format!("Unimplemented opcode: {}", op)),
         };
 
@@ -86,14 +87,19 @@ impl Chip8 {
             return;
         }
 
-        // advance program counter
-        self.pc += 2;
+        // advance program counter (memory is [u8], opcode is u16, that's why we advance 'pc' by two)
+        self.increase_program_counter();
+        self.increase_program_counter();
 
         println!("Opcode executed: {}", result.unwrap());
     }
 
     fn nnn_address(&self, op: u16) -> u16 {
         op & 0xFFF
+    }
+
+    fn kk(&self, op: u16) -> u8 {
+        (op & 0xFF) as u8
     }
 
     fn push(&mut self, elem: u16) {
@@ -105,7 +111,6 @@ impl Chip8 {
     fn pop(&mut self) -> u16 {
         // todo(fedejinich) no error handling, what happens when there's nothing left?
         self.stack_pointer -= 1;
-        self.increase_stack_pointer();
         self.stack[self.stack_pointer as usize]
     }
 
@@ -122,13 +127,7 @@ impl Chip8 {
         self.pc -= 1;
     }
 
-    fn increase_stack_pointer(&mut self) {
-        self.stack_pointer += 1;
-    }
-
-    fn decrease_stack_pointer(&mut self) {
-        self.stack_pointer -= 1;
-    }
+    // OPCODES
 
     // Jump to a machine code routine at nnn.
     // This instruction is only used on the old computers on which Chip-8 was originally implemented. It is ignored by modern interpreters.
@@ -163,6 +162,13 @@ impl Chip8 {
         self.push(self.pc);
         self.set_pc(nnn);
         Ok(format!("CALL {}", nnn))
+    }
+
+    fn opcode_se(&mut self, x: usize, kk: u8) -> OpcodeExec {
+        if self.v_reg[x] == kk {
+            self.increase_program_counter();
+        }
+        Ok(format!("SE v{}, {}", x, kk))
     }
 }
 
