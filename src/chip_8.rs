@@ -80,6 +80,8 @@ impl Chip8 {
             (0x2, _, _, _) => self.opcode_call(self.nnn_address(op)), // CALL addr
             (0x3, _, _, _) => self.opcode_se(n2 as usize, self.kk(op)), // SE Vx, byte
             (0x4, _, _, _) => self.opcode_sne(n2 as usize, self.kk(op)), // SNE Vx, byte
+            (0x5, _, _, 0) => self.opcode_sey(n2 as usize, n3 as usize), // SE Vx Vy
+            (0x6, _, _, _) => self.opcode_ld(n2 as usize, self.kk(op)), // LD Vx, byte
             (_, _, _, _) => Err(format!("Unimplemented opcode: {}", op)),
         };
 
@@ -124,10 +126,6 @@ impl Chip8 {
         self.pc += 1;
     }
 
-    fn decrease_program_counter(&mut self) {
-        self.pc -= 1;
-    }
-
     // OPCODES
 
     // Jump to a machine code routine at nnn.
@@ -164,7 +162,9 @@ impl Chip8 {
         self.set_pc(nnn);
         Ok(format!("CALL {}", nnn))
     }
-
+    
+    // Skip next instruction if Vx = kk.
+    // The interpreter compares register Vx to kk, and if they are equal, increments the program counter by 2.
     fn opcode_se(&mut self, x: usize, kk: u8) -> OpcodeExec {
         if self.v_reg[x] == kk {
             self.increase_program_counter();
@@ -172,11 +172,36 @@ impl Chip8 {
         Ok(format!("SE v{}, {}", x, kk))
     }
 
+    // Skip next instruction if Vx != kk.
+    // The interpreter compares register Vx to kk, and if they are not equal, increments the program counter by 2.
     fn opcode_sne(&mut self, x: usize, kk: u8) -> OpcodeExec {
         if self.v_reg[x] != kk {
             self.increase_program_counter();
         }
         Ok(format!("SNE v{}, {}", x, kk))
+    }
+
+    // Skip next instruction if Vx = Vy.
+    // The interpreter compares register Vx to register Vy, and if they are equal, increments the program counter by 2.
+    fn opcode_sey(&mut self, x: usize, y: usize) -> OpcodeExec {
+        if self.v_reg[x] == self.v_reg[y] {
+            self.increase_program_counter();
+        }
+        Ok(format!("SE vx{} vy{}", x, y))
+    }
+
+    // Set Vx = kk.
+    // The interpreter puts the value kk into register Vx.
+    fn opcode_ld(&mut self, x: usize, kk: u8) -> OpcodeExec {
+        self.v_reg[x] = kk;
+        Ok(format!("LD vx{} {}", x, kk))
+    }
+
+    // Set Vx = Vx + kk.
+    // Adds the value kk to the value of register Vx, then stores the result in Vx.
+    fn opcode_add(&mut self, x: usize, kk: u8) -> OpcodeExec {
+        self.v_reg[x] = self.v_reg[x] + kk;
+        Ok(format!("ADD vx{} {}", x, kk))
     }
 }
 
