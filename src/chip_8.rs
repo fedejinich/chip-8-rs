@@ -82,6 +82,7 @@ impl Chip8 {
             (0x4, _, _, _) => self.opcode_sne(n2 as usize, self.kk(op)), // SNE Vx, byte
             (0x5, _, _, 0) => self.opcode_sey(n2 as usize, n3 as usize), // SE Vx Vy
             (0x6, _, _, _) => self.opcode_ld(n2 as usize, self.kk(op)), // LD Vx, byte
+            (0x7, _, _, _) => self.opcode_add(n2 as usize, self.kk(op)), // ADD Vx, byte                                                            
             (_, _, _, _) => Err(format!("Unimplemented opcode: {}", op)),
         };
 
