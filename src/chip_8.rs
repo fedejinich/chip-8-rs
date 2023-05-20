@@ -84,6 +84,8 @@ impl Chip8 {
             (0x6, _, _, _) => self.opcode_ld(n2 as usize, self.kk(op)), // LD Vx, byte
             (0x7, _, _, _) => self.opcode_add(n2 as usize, self.kk(op)), // ADD Vx, byte
             (0x8, _, _, 0) => self.opcode_ldy(n2 as usize, n3 as usize), // LD Vx, Vy
+            (0x8, _, _, 1) => self.opcode_or(n2 as usize, n3 as usize), // OR Vx, Vy
+
             (_, _, _, _) => Err(format!("Unimplemented opcode: {}", op)),
         };
 
@@ -211,6 +213,16 @@ impl Chip8 {
     fn opcode_ldy(&mut self, x: usize, y: usize) -> OpcodeExec {
         self.v_reg[x] = self.v_reg[y];
         Ok(format!("LD vx{}, vy{}", x, y))
+    }
+
+
+    // Set Vx = Vx OR Vy.
+    // Performs a bitwise OR on the values of Vx and Vy, then stores the result in Vx.
+    // A bitwise OR compares the corrseponding bits from two values, and if either bit is 1,
+    // then the same bit in the result is also 1. Otherwise, it is 0.
+    fn opcode_or(&mut self, x: usize, y: usize) -> OpcodeExec {
+        self.v_reg[x] = self.v_reg[x] | self.v_reg[y];
+        Ok(format!("OR vx{}, vy{}", x, y))
     }
 }
 
