@@ -82,7 +82,8 @@ impl Chip8 {
             (0x4, _, _, _) => self.opcode_sne(n2 as usize, self.kk(op)), // SNE Vx, byte
             (0x5, _, _, 0) => self.opcode_sey(n2 as usize, n3 as usize), // SE Vx Vy
             (0x6, _, _, _) => self.opcode_ld(n2 as usize, self.kk(op)), // LD Vx, byte
-            (0x7, _, _, _) => self.opcode_add(n2 as usize, self.kk(op)), // ADD Vx, byte                                                            
+            (0x7, _, _, _) => self.opcode_add(n2 as usize, self.kk(op)), // ADD Vx, byte
+            (0x8, _, _, 0) => self.opcode_ldy(n2 as usize, n3 as usize), // LD Vx, Vy
             (_, _, _, _) => Err(format!("Unimplemented opcode: {}", op)),
         };
 
@@ -163,7 +164,7 @@ impl Chip8 {
         self.set_pc(nnn);
         Ok(format!("CALL {}", nnn))
     }
-    
+
     // Skip next instruction if Vx = kk.
     // The interpreter compares register Vx to kk, and if they are equal, increments the program counter by 2.
     fn opcode_se(&mut self, x: usize, kk: u8) -> OpcodeExec {
@@ -203,6 +204,13 @@ impl Chip8 {
     fn opcode_add(&mut self, x: usize, kk: u8) -> OpcodeExec {
         self.v_reg[x] = self.v_reg[x] + kk;
         Ok(format!("ADD vx{} {}", x, kk))
+    }
+
+    // Set Vx = Vy.
+    // Stores the value of register Vy in register Vx.
+    fn opcode_ldy(&mut self, x: usize, y: usize) -> OpcodeExec {
+        self.v_reg[x] = self.v_reg[y];
+        Ok(format!("LD vx{}, vy{}", x, y))
     }
 }
 
