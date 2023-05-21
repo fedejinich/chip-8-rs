@@ -1,8 +1,8 @@
-use crate::opcodes::{match_opcode, OpcodeExec};
+use crate::opcodes::{match_opcode, OpcodeExec, fetch_op};
 
 const PROGRAM_START_ADDRESS: u16 = 0x200;
 
-const MEM_SIZE: usize = 4096;
+pub const MEM_SIZE: usize = 4096;
 const NUM_REGS: usize = 16;
 const STACK_SIZE: usize = 16;
 
@@ -49,18 +49,9 @@ impl Chip8 {
     #[allow(dead_code)]
     // todo(fedejinich) add unit test for this
     pub fn tick(&mut self) {
-        let op = self.fetch_op();
+        let op = fetch_op(&self.memory, &(self.pc as usize));
         self.execute_op(op);
         println!("tick")
-    }
-
-    // todo(fedejinich) add unit test for this
-    // fetches the 16-bit opcode stored in memory at the program counter
-    fn fetch_op(&self) -> u16 {
-        let high = self.memory[self.pc as usize] as u16;
-        let low = self.memory[(self.pc as usize) + 1] as u16;
-        let op = (high >> 8) | low;
-        op
     }
 
     // todo(fedejinich) add unit test for this
@@ -94,7 +85,7 @@ impl Chip8 {
         self.stack[self.stack_pointer as usize]
     }
 
-    fn set_pc(&mut self, pc: &u16) {
+    fn pc(&mut self, pc: &u16) {
         // todo(fedejinich) no error handling, should restrict pc to fit in memory range?
         self.pc = pc.clone();
     }
@@ -110,12 +101,12 @@ impl Chip8 {
         self.display = [false; SCREEN_WIDTH * SCREEN_HEIGTH];
         Ok(String::from("CLS"))
     }
-    
+
     // Return from a subroutine.
     // The interpreter sets the program counter to the address at the top of the stack, then subtracts 1 from the stack pointer.
     pub fn opcode_ret(&mut self) -> OpcodeExec {
         let new_pc = self.pop();
-        self.set_pc(&new_pc);
+        self.pc(&new_pc);
         Ok(String::from("RET"))
     }
 
@@ -128,7 +119,7 @@ impl Chip8 {
     // Jump to location nnn.
     // The interpreter sets the program counter to nnn.
     pub fn opcode_jmp(&mut self, nnn: u16) -> OpcodeExec {
-        self.set_pc(&nnn);
+        self.pc(&nnn);
         Ok(format!("JMP {}", nnn))
     }
 
@@ -136,7 +127,7 @@ impl Chip8 {
     // The interpreter increments the stack pointer, then puts the current PC on the top of the stack. The PC is then set to nnn.
     pub fn opcode_call(&mut self, nnn: u16) -> OpcodeExec {
         self.push(self.pc);
-        self.set_pc(&nnn);
+        self.pc(&nnn);
         Ok(format!("CALL {}", nnn))
     }
 

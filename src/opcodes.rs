@@ -1,4 +1,4 @@
-use crate::chip_8::Chip8;
+use crate::chip_8::{Chip8, MEM_SIZE};
 
 pub type OpcodeExec = Result<String, String>;
 
@@ -16,6 +16,15 @@ pub enum Opcode {
     ADD(usize, u8),     // ADD Vx, byte
     LDVy(usize, usize), // LD Vx, Vy
     OR(usize, usize),   // OR Vx, Vy
+}
+
+// todo(fedejinich) add unit test for this
+// fetches the 16-bit opcode stored in memory at the program counter
+pub fn fetch_op(memory: &[u8; MEM_SIZE], pc: &usize) -> u16 {
+    let high = memory[*pc] as u16;
+    let low = memory[*pc + 1] as u16;
+    let op = (high >> 8) | low;
+    op
 }
 
 pub fn match_opcode(op: u16) -> Opcode {
