@@ -205,6 +205,18 @@ mod tests {
     }
 
     #[test]
+    fn test_opcode_call() {
+        let mut chip_8 = Chip8::default();
+
+        assert_eq!(chip_8.pc, PROGRAM_START_ADDRESS);
+
+        chip_8.opcode_call(PROGRAM_START_ADDRESS + 3).unwrap();
+
+        assert_eq!(chip_8.pop(), PROGRAM_START_ADDRESS);
+        assert_eq!(chip_8.pc, PROGRAM_START_ADDRESS + 3);
+    }
+
+    #[test]
     fn test_opcode_se() {
         let mut chip_8 = Chip8::default();
         let val = 0b01010101;
