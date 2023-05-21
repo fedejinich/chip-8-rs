@@ -1,6 +1,4 @@
-use crate::opcodes::match_opcode;
-
-type OpcodeExec = Result<String, String>;
+use crate::opcodes::{match_opcode, OpcodeExec};
 
 const PROGRAM_START_ADDRESS: u16 = 0x200;
 
