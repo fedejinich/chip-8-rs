@@ -189,6 +189,8 @@ impl Chip8 {
 
 #[cfg(test)]
 mod tests {
+    use std::assert_eq;
+
     use super::*;
 
     #[test]
@@ -203,12 +205,43 @@ mod tests {
     }
 
     #[test]
+    fn test_opcode_se_vy() {
+        let mut chip_8 = Chip8::default();
+        let val = 0b01010101;
+        let x = 0;
+        let y = 1;
+
+        chip_8.opcode_ld(x, val).unwrap();
+        chip_8.opcode_ld(y, 0b01010101).unwrap();
+
+        assert_eq!(chip_8.pc, PROGRAM_START_ADDRESS);
+
+        chip_8.opcode_se_vy(x, y).unwrap();
+        
+        assert_eq!(chip_8.pc, PROGRAM_START_ADDRESS + 1);
+    }
+
+    #[test]
     fn test_opcode_ld() {
         let mut chip_8 = Chip8::default();
         chip_8.opcode_ld(0, 0b01010101).unwrap();
 
         assert_eq!(chip_8.v_reg[1], 0);
         assert_eq!(chip_8.v_reg[0], 0b01010101);
+    }
+
+    #[test]
+    fn test_opcode_add() {
+        let mut chip_8 = Chip8::default();
+        let x = 0;
+
+        chip_8.opcode_ld(x, 3).unwrap();
+
+        assert_eq!(chip_8.v_reg[x], 3);
+
+        chip_8.opcode_add(x, 1).unwrap();
+
+        assert_eq!(chip_8.v_reg[x], 4);
     }
 
     #[test]
