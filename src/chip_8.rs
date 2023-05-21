@@ -57,9 +57,7 @@ impl Chip8 {
     // todo(fedejinich) add unit test for this
     // decodes the given opcode and executes it
     fn execute_op(&mut self, op: u16) {
-        let opcode = match_opcode(op);
-
-        let result = opcode.execute_op(self);
+        let result = match_opcode(op).execute_op(self);
 
         if (&result).is_err() {
             println!("Opcode execution error: {}", result.unwrap_err());
