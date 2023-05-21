@@ -1,4 +1,4 @@
-use crate::opcodes::{match_opcode, OpcodeExec, fetch_op};
+use crate::opcodes::{fetch_op, match_opcode, OpcodeExec};
 
 const PROGRAM_START_ADDRESS: u16 = 0x200;
 
@@ -48,7 +48,7 @@ impl Chip8 {
 
     #[allow(dead_code)]
     // todo(fedejinich) add unit test for this
-    pub fn tick(&mut self) {
+    fn tick(&mut self) {
         let op = fetch_op(&self.memory, &(self.pc as usize));
         self.execute_op(op);
         println!("tick")
@@ -200,5 +200,27 @@ mod tests {
         let start = PROGRAM_START_ADDRESS as usize;
         let end = start + program.len();
         assert_eq!(program, chip_8.memory[start..end]);
+    }
+
+    #[test]
+    fn test_opcode_ld() {
+        let mut chip_8 = Chip8::default();
+        chip_8.opcode_ld(0, 0b01010101).unwrap();
+
+        assert_eq!(chip_8.v_reg[1], 0); 
+        assert_eq!(chip_8.v_reg[0], 0b01010101);
+    }
+
+    #[test]
+    fn test_or() {
+        let x = 0;
+        let y = 10;
+        let mut chip_8 = Chip8::default();
+        chip_8.opcode_ld(x, 0b01010101).unwrap();
+        chip_8.opcode_ld(y, 0b11001001).unwrap();
+
+        chip_8.opcode_or(x, y).unwrap();
+
+        assert_eq!(chip_8.v_reg[x], 0b11011101);
     }
 }
