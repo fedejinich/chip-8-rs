@@ -122,7 +122,7 @@ impl Chip8 {
     }
 
     // Call subroutine at nnn.
-    // The interpreter increments the stack pointer, then puts the current PC on the top of the stack. The PC is then set to nnn.
+    // The interpreter increments the stack pointer, then puts the current PC on the top of the stack (push). The PC is then set to nnn.
     pub fn opcode_call(&mut self, nnn: u16) -> OpcodeExec {
         self.push(self.pc);
         self.pc(&nnn);
@@ -190,7 +190,6 @@ impl Chip8 {
 #[cfg(test)]
 mod tests {
     use std::assert_eq;
-
     use super::*;
 
     #[test]
@@ -202,6 +201,42 @@ mod tests {
         let start = PROGRAM_START_ADDRESS as usize;
         let end = start + program.len();
         assert_eq!(program, chip_8.memory[start..end]);
+    }
+
+    #[test]
+    fn test_opcode_cls() {
+        let mut chip_8 = Chip8::default();
+
+        assert_eq!(chip_8.display, [false; SCREEN_WIDTH * SCREEN_HEIGTH]);
+
+        chip_8.display = [true; SCREEN_WIDTH * SCREEN_HEIGTH];
+
+        chip_8.opcode_cls().unwrap();
+
+        assert_eq!(chip_8.display, [false; SCREEN_WIDTH * SCREEN_HEIGTH]);
+    }
+
+    #[test]
+    fn test_opcode_ret() {
+        let mut chip_8 = Chip8::default();
+
+        assert_eq!(chip_8.pc, PROGRAM_START_ADDRESS);
+
+        chip_8.push(PROGRAM_START_ADDRESS + 5);
+        chip_8.opcode_ret().unwrap();
+
+        assert_eq!(chip_8.pc, PROGRAM_START_ADDRESS + 5);
+    }
+
+    #[test]
+    fn test_opcode_jmp() {
+        let mut chip_8 = Chip8::default();
+
+        assert_eq!(chip_8.pc, PROGRAM_START_ADDRESS);
+
+        chip_8.opcode_jmp(PROGRAM_START_ADDRESS + 3).unwrap();
+
+        assert_eq!(chip_8.pc, PROGRAM_START_ADDRESS + 3);
     }
 
     #[test]
