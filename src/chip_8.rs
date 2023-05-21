@@ -205,6 +205,36 @@ mod tests {
     }
 
     #[test]
+    fn test_opcode_se() {
+        let mut chip_8 = Chip8::default();
+        let val = 0b01010101;
+        let x = 0;
+
+        chip_8.opcode_ld(x, val).unwrap();
+
+        assert_eq!(chip_8.pc, PROGRAM_START_ADDRESS);
+
+        chip_8.opcode_se(x, val).unwrap();
+
+        assert_eq!(chip_8.pc, PROGRAM_START_ADDRESS + 1);
+    }
+
+    #[test]
+    fn test_opcode_sne() {
+        let mut chip_8 = Chip8::default();
+        let val = 0b01010101;
+        let x = 0;
+
+        chip_8.opcode_ld(x, val).unwrap();
+
+        assert_eq!(chip_8.pc, PROGRAM_START_ADDRESS);
+
+        chip_8.opcode_sne(x, 0b11111111).unwrap();
+
+        assert_eq!(chip_8.pc, PROGRAM_START_ADDRESS + 1);
+    }
+
+    #[test]
     fn test_opcode_se_vy() {
         let mut chip_8 = Chip8::default();
         let val = 0b01010101;
@@ -217,7 +247,7 @@ mod tests {
         assert_eq!(chip_8.pc, PROGRAM_START_ADDRESS);
 
         chip_8.opcode_se_vy(x, y).unwrap();
-        
+
         assert_eq!(chip_8.pc, PROGRAM_START_ADDRESS + 1);
     }
 
