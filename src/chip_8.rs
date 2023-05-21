@@ -65,8 +65,8 @@ impl Chip8 {
         }
 
         // advance program counter (memory is [u8], opcode is u16, that's why we advance 'pc' by two)
-        self.increase_program_counter();
-        self.increase_program_counter();
+        self.pc_inc();
+        self.pc_inc();
 
         println!("Opcode executed: {}", result.unwrap());
     }
@@ -88,7 +88,7 @@ impl Chip8 {
         self.pc = pc.clone();
     }
 
-    fn increase_program_counter(&mut self) {
+    fn pc_inc(&mut self) {
         self.pc += 1;
     }
 
@@ -133,7 +133,7 @@ impl Chip8 {
     // The interpreter compares register Vx to kk, and if they are equal, increments the program counter by 2.
     pub fn opcode_se(&mut self, x: usize, kk: u8) -> OpcodeExec {
         if self.v_reg[x] == kk {
-            self.increase_program_counter();
+            self.pc_inc();
         }
         Ok(format!("SE v{}, {}", x, kk))
     }
@@ -142,7 +142,7 @@ impl Chip8 {
     // The interpreter compares register Vx to kk, and if they are not equal, increments the program counter by 2.
     pub fn opcode_sne(&mut self, x: usize, kk: u8) -> OpcodeExec {
         if self.v_reg[x] != kk {
-            self.increase_program_counter();
+            self.pc_inc();
         }
         Ok(format!("SNE v{}, {}", x, kk))
     }
@@ -151,7 +151,7 @@ impl Chip8 {
     // The interpreter compares register Vx to register Vy, and if they are equal, increments the program counter by 2.
     pub fn opcode_se_vy(&mut self, x: usize, y: usize) -> OpcodeExec {
         if self.v_reg[x] == self.v_reg[y] {
-            self.increase_program_counter();
+            self.pc_inc();
         }
         Ok(format!("SE vx{} vy{}", x, y))
     }
