@@ -207,8 +207,24 @@ mod tests {
         let mut chip_8 = Chip8::default();
         chip_8.opcode_ld(0, 0b01010101).unwrap();
 
-        assert_eq!(chip_8.v_reg[1], 0); 
+        assert_eq!(chip_8.v_reg[1], 0);
         assert_eq!(chip_8.v_reg[0], 0b01010101);
+    }
+
+    #[test]
+    fn test_opcode_ld_vy() {
+        let mut chip_8 = Chip8::default();
+
+        chip_8.opcode_ld(0, 0b01010101).unwrap();
+        chip_8.opcode_ld(1, 0b11111111).unwrap();
+
+        assert_eq!(chip_8.v_reg[0], 0b01010101);
+        assert_eq!(chip_8.v_reg[1], 0b11111111);
+
+        chip_8.opcode_ld_vy(0, 1).unwrap();
+
+        assert_eq!(chip_8.v_reg[0], 0b11111111);
+        assert_eq!(chip_8.v_reg[1], 0b11111111);
     }
 
     #[test]
