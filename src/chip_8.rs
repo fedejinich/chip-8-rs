@@ -198,13 +198,18 @@ impl Chip8 {
     }
 }
 
-#[test]
-fn test_load_program() {
-    let program = vec![1, 2, 3, 4, 5, 6, 7];
-    let mut chip_8 = Chip8::default();
-    chip_8.load_program(&program);
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-    let start = PROGRAM_START_ADDRESS as usize;
-    let end = start + program.len();
-    assert_eq!(program, chip_8.memory[start..end]);
+    #[test]
+    fn test_load_program() {
+        let program = vec![1, 2, 3, 4, 5, 6, 7];
+        let mut chip_8 = Chip8::default();
+        chip_8.load_program(&program);
+
+        let start = PROGRAM_START_ADDRESS as usize;
+        let end = start + program.len();
+        assert_eq!(program, chip_8.memory[start..end]);
+    }
 }
