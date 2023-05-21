@@ -16,6 +16,8 @@ pub enum Opcode {
     ADD(usize, u8),     // ADD Vx, byte
     LDVy(usize, usize), // LD Vx, Vy
     OR(usize, usize),   // OR Vx, Vy
+                        // AND Vx, Vy
+
 }
 
 // todo(fedejinich) add unit test for this

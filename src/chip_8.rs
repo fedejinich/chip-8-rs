@@ -185,12 +185,21 @@ impl Chip8 {
         self.v_reg[x] = self.v_reg[x] | self.v_reg[y];
         Ok(format!("OR vx{}, vy{}", x, y))
     }
+
+    // Set Vx = Vx AND Vy.
+    // Performs a bitwise AND on the values of Vx and Vy, then stores the result in Vx.
+    // A bitwise AND compares the corrseponding bits from two values, and if both bits are 1,
+    // then the same bit in the result is also 1. Otherwise, it is 0.
+    pub fn opcode_and(&mut self, x: usize, y: usize) -> OpcodeExec {
+        self.v_reg[x] = self.v_reg[x] & self.v_reg[y];
+        Ok(format!("OR vx{}, vy{}", x, y))
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use std::assert_eq;
     use super::*;
+    use std::assert_eq;
 
     #[test]
     fn test_load_program() {
@@ -348,5 +357,18 @@ mod tests {
         chip_8.opcode_or(x, y).unwrap();
 
         assert_eq!(chip_8.v_reg[x], 0b11011101);
+    }
+
+    #[test]
+    fn test_and() {
+        let x = 0;
+        let y = 10;
+        let mut chip_8 = Chip8::default();
+        chip_8.opcode_ld(x, 0b01010101).unwrap();
+        chip_8.opcode_ld(y, 0b11001001).unwrap();
+
+        chip_8.opcode_and(x, y).unwrap();
+
+        assert_eq!(chip_8.v_reg[x], 0b01000001);
     }
 }
