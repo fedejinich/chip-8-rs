@@ -16,8 +16,8 @@ pub enum Opcode {
     ADD(usize, u8),     // ADD Vx, byte
     LDVy(usize, usize), // LD Vx, Vy
     OR(usize, usize),   // OR Vx, Vy
-                        // AND Vx, Vy
-
+    AND(usize, usize),  // AND Vx, Vy
+    XOR(usize, usize),  // XOR Vx, Vy
 }
 
 // todo(fedejinich) add unit test for this
@@ -48,7 +48,8 @@ pub fn match_opcode(op: u16) -> Opcode {
         (0x7, _, _, _) => Opcode::ADD(n2, kk(op)),
         (0x8, _, _, 0) => Opcode::LDVy(n2, n3),
         (0x8, _, _, 1) => Opcode::OR(n2, n3),
-
+        (0x8, _, _, 2) => Opcode::AND(n2, n3),
+        (0x8, _, _, 3) => Opcode::XOR(n2, n3),
         (_, _, _, _) => Opcode::ERROR(format!("Unimplemented opcode: {}", op)),
     };
 
@@ -78,6 +79,8 @@ impl Opcode {
             Opcode::ADD(vx, vy) => chip_8.opcode_add(*vx, *vy),
             Opcode::LDVy(vx, vy) => chip_8.opcode_ld_vy(*vx, *vy),
             Opcode::OR(vx, vy) => chip_8.opcode_or(*vx, *vy),
+            Opcode::AND(vx, vy) => chip_8.opcode_and(*vx, *vy),
+            Opcode::XOR(vx, vy) => chip_8.opcode_xor(*vx, *vy),
             Opcode::ERROR(e) => Err(e.clone()),
         }
     }

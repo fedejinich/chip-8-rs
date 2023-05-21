@@ -192,7 +192,16 @@ impl Chip8 {
     // then the same bit in the result is also 1. Otherwise, it is 0.
     pub fn opcode_and(&mut self, x: usize, y: usize) -> OpcodeExec {
         self.v_reg[x] = self.v_reg[x] & self.v_reg[y];
-        Ok(format!("OR vx{}, vy{}", x, y))
+        Ok(format!("AND vx{}, vy{}", x, y))
+    }
+
+    // Set Vx = Vx XOR Vy.
+    // Performs a bitwise exclusive OR on the values of Vx and Vy, then stores the result in Vx.
+    // An exclusive OR compares the corrseponding bits from two values, and if the bits are not both the same,
+    // then the corresponding bit in the result is set to 1. Otherwise, it is 0.
+    pub fn opcode_xor(&mut self, x: usize, y: usize) -> OpcodeExec {
+        self.v_reg[x] = self.v_reg[x] ^ self.v_reg[y];
+        Ok(format!("XOR vx{}, vy{}", x, y))
     }
 }
 
@@ -370,5 +379,18 @@ mod tests {
         chip_8.opcode_and(x, y).unwrap();
 
         assert_eq!(chip_8.v_reg[x], 0b01000001);
+    }
+
+    #[test]
+    fn test_xor() {
+        let x = 0;
+        let y = 10;
+        let mut chip_8 = Chip8::default();
+        chip_8.opcode_ld(x, 0b01010101).unwrap();
+        chip_8.opcode_ld(y, 0b11001001).unwrap();
+
+        chip_8.opcode_xor(x, y).unwrap();
+
+        assert_eq!(chip_8.v_reg[x], 0b10011100);
     }
 }
