@@ -230,6 +230,17 @@ impl Chip8 {
 
         Ok(format!("SUB vx{}, vy{}", x, y))
     }
+
+    // Set Vx = Vx SHR 1.
+    // If the least-significant bit of Vx is 1, then VF is set to 1, otherwise 0. Then Vx is divided by 2.
+    pub fn opcode_shr(&mut self, x: usize) -> OpcodeExec {
+        let least = self.v_reg[x] & 0b00000001;
+
+        self.v_reg[0xF] = least;
+        self.v_reg[x] >>= 1; // this is equal to /2
+
+        Ok(format!("SHR vx{}", x))
+    }
 }
 
 #[cfg(test)]
@@ -477,5 +488,20 @@ mod tests {
         // overflows
         assert_eq!(chip_8.v_reg[0xF], 0);
         assert_eq!(chip_8.v_reg[x], 254);
+    }
+
+    #[test]
+    fn test_opcode_shr() {
+        let mut chip_8 = Chip8::default();
+        let x = 0;
+
+        chip_8.opcode_ld(x, 7).unwrap();
+
+        assert_eq!(chip_8.v_reg[0xF], 0);
+
+        chip_8.opcode_shr(x).unwrap();
+
+        assert_eq!(chip_8.v_reg[x], 3);
+        assert_eq!(chip_8.v_reg[0xF], 1);
     }
 }
