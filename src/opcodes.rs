@@ -21,6 +21,7 @@ pub enum Opcode {
     ADDVy(usize, usize), // ADD Vx, Vy
     SUB(usize, usize),   // SUB Vx, Vy
     SHR(usize),          // SHR Vx
+    SUBN(usize, usize),  // SUBN Vx, Vy
 }
 
 // todo(fedejinich) add unit test for this
@@ -56,6 +57,7 @@ pub fn match_opcode(op: u16) -> Opcode {
         (0x8, _, _, 4) => Opcode::ADDVy(n2, n3),
         (0x8, _, _, 5) => Opcode::SUB(n2, n3),
         (0x8, _, _, 6) => Opcode::SHR(n2),
+        (0x8, _, _, 7) => Opcode::SUBN(n2, n3),
         (_, _, _, _) => Opcode::ERROR(format!("Unimplemented opcode: {}", op)),
     };
 
@@ -90,6 +92,7 @@ impl Opcode {
             Opcode::ADDVy(vx, vy) => chip_8.opcode_add_vy(*vx, *vy),
             Opcode::SUB(vx, vy) => chip_8.opcode_sub(*vx, *vy),
             Opcode::SHR(vx) => chip_8.opcode_shr(*vx),
+            Opcode::SUBN(vx, vy) => chip_8.opcode_subn(*vx, *vy),
             Opcode::ERROR(e) => Err(e.clone()),
         }
     }

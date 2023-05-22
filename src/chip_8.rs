@@ -241,6 +241,18 @@ impl Chip8 {
 
         Ok(format!("SHR vx{}", x))
     }
+
+    // Set Vx = Vy - Vx, set VF = NOT borrow.
+    // If Vy > Vx, then VF is set to 1, otherwise 0. Then Vx is subtracted from Vy, and the results stored in Vx.
+    pub fn opcode_subn(&mut self, x: usize, y: usize) -> OpcodeExec {
+        let (new_vx, borrow) = self.v_reg[y].overflowing_sub(self.v_reg[x]);
+        let new_vf = if borrow { 0 } else { 1 };
+
+        self.v_reg[x] = new_vx;
+        self.v_reg[0xF] = new_vf;
+
+        Ok(format!("SUBN vx{}, vy{}", x, y))
+    }
 }
 
 #[cfg(test)]
@@ -503,5 +515,34 @@ mod tests {
 
         assert_eq!(chip_8.v_reg[x], 3);
         assert_eq!(chip_8.v_reg[0xF], 1);
+    }
+
+    #[test]
+    fn test_opcode_subn() {
+        let mut chip_8 = Chip8::default();
+        let x = 0;
+        let y = 2;
+
+        chip_8.opcode_ld(x, 1).unwrap();
+        chip_8.opcode_ld(y, 3).unwrap();
+
+        assert_eq!(chip_8.v_reg[0xF], 0);
+
+        chip_8.opcode_subn(x, y).unwrap();
+
+        // normal sub
+        assert_eq!(chip_8.v_reg[0xF], 1);
+        assert_eq!(chip_8.v_reg[x], 2);
+
+        chip_8.opcode_ld(x, 3).unwrap();
+        chip_8.opcode_ld(y, 1).unwrap();
+
+        assert_eq!(chip_8.v_reg[0xF], 1);
+
+        chip_8.opcode_subn(x, y).unwrap();
+
+        // overflows
+        assert_eq!(chip_8.v_reg[0xF], 0);
+        assert_eq!(chip_8.v_reg[x], 254);
     }
 }
