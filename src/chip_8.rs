@@ -136,6 +136,7 @@ impl Chip8 {
     pub fn opcode_se(&mut self, x: usize, kk: u8) -> OpcodeExec {
         if self.v_reg[x] == kk {
             self.pc_inc();
+            self.pc_inc();
         }
         Ok(format!("SE v{}, {}", x, kk))
     }
@@ -145,6 +146,7 @@ impl Chip8 {
     pub fn opcode_sne(&mut self, x: usize, kk: u8) -> OpcodeExec {
         if self.v_reg[x] != kk {
             self.pc_inc();
+            self.pc_inc();
         }
         Ok(format!("SNE v{}, {}", x, kk))
     }
@@ -153,6 +155,7 @@ impl Chip8 {
     // The interpreter compares register Vx to register Vy, and if they are equal, increments the program counter by 2.
     pub fn opcode_se_vy(&mut self, x: usize, y: usize) -> OpcodeExec {
         if self.v_reg[x] == self.v_reg[y] {
+            self.pc_inc();
             self.pc_inc();
         }
         Ok(format!("SE vx{} vy{}", x, y))
@@ -234,7 +237,7 @@ impl Chip8 {
     // Set Vx = Vx SHR 1.
     // If the least-significant bit of Vx is 1, then VF is set to 1, otherwise 0. Then Vx is divided by 2.
     pub fn opcode_shr(&mut self, x: usize) -> OpcodeExec {
-        let least = self.v_reg[x] & 0b00000001;
+        let least = self.v_reg[x] & 1;
 
         self.v_reg[0xF] = least;
         self.v_reg[x] >>= 1; // this is equal to /2
@@ -252,6 +255,27 @@ impl Chip8 {
         self.v_reg[0xF] = new_vf;
 
         Ok(format!("SUBN vx{}, vy{}", x, y))
+    }
+
+    // Set Vx = Vx SHL 1.
+    // If the most-significant bit of Vx is 1, then VF is set to 1, otherwise to 0. Then Vx is multiplied by 2.
+    pub fn opcode_shl(&mut self, x: usize) -> OpcodeExec {
+        let most = (self.v_reg[x] >> 7) & 1;
+
+        self.v_reg[0xF] = most;
+        self.v_reg[x] <<= 1; // this is equal to *2
+
+        Ok(format!("SHL vx{}", x))
+    }
+
+    // Skip next instruction if Vx != Vy.
+    // The values of Vx and Vy are compared, and if they are not equal, the program counter is increased by 2.
+    pub fn opcode_sne_vy(&mut self, x: usize, y: usize) -> OpcodeExec {
+        if self.v_reg[x] != self.v_reg[y] {
+            self.pc_inc();
+            self.pc_inc();
+        }
+        Ok(format!("SNE vx{}, vy{}", x, y))
     }
 }
 
@@ -331,7 +355,7 @@ mod tests {
 
         chip_8.opcode_se(x, val).unwrap();
 
-        assert_eq!(chip_8.pc, PROGRAM_START_ADDRESS + 1);
+        assert_eq!(chip_8.pc, PROGRAM_START_ADDRESS + 2);
     }
 
     #[test]
@@ -346,7 +370,7 @@ mod tests {
 
         chip_8.opcode_sne(x, 0b11111111).unwrap();
 
-        assert_eq!(chip_8.pc, PROGRAM_START_ADDRESS + 1);
+        assert_eq!(chip_8.pc, PROGRAM_START_ADDRESS + 2);
     }
 
     #[test]
@@ -363,7 +387,7 @@ mod tests {
 
         chip_8.opcode_se_vy(x, y).unwrap();
 
-        assert_eq!(chip_8.pc, PROGRAM_START_ADDRESS + 1);
+        assert_eq!(chip_8.pc, PROGRAM_START_ADDRESS + 2);
     }
 
     #[test]
@@ -544,5 +568,36 @@ mod tests {
         // overflows
         assert_eq!(chip_8.v_reg[0xF], 0);
         assert_eq!(chip_8.v_reg[x], 254);
+    }
+
+    #[test]
+    fn test_opcode_shl() {
+        let mut chip_8 = Chip8::default();
+        let x = 0;
+
+        chip_8.opcode_ld(x, 250).unwrap();
+
+        assert_eq!(chip_8.v_reg[0xF], 0);
+
+        chip_8.opcode_shl(x).unwrap();
+
+        assert_eq!(chip_8.v_reg[x], 244);
+        assert_eq!(chip_8.v_reg[0xF], 1);
+    }
+
+    #[test]
+    fn test_opcode_sne_vy() {
+        let mut chip_8 = Chip8::default();
+        let x = 0;
+        let y = 10;
+
+        chip_8.opcode_ld(x, 0b01010101).unwrap();
+        chip_8.opcode_ld(y, 0b11111101).unwrap();
+
+        assert_eq!(chip_8.pc, PROGRAM_START_ADDRESS);
+
+        chip_8.opcode_sne_vy(x, y).unwrap();
+
+        assert_eq!(chip_8.pc, PROGRAM_START_ADDRESS + 2);
     }
 }
