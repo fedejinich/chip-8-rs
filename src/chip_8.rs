@@ -1,3 +1,5 @@
+use std::format;
+
 use crate::opcodes::{fetch_op, match_opcode, OpcodeExec};
 
 const PROGRAM_START_ADDRESS: u16 = 0x200;
@@ -203,6 +205,24 @@ impl Chip8 {
         self.v_reg[x] = self.v_reg[x] ^ self.v_reg[y];
         Ok(format!("XOR vx{}, vy{}", x, y))
     }
+
+    // Set Vx = Vx + Vy, set VF = carry.
+    // The values of Vx and Vy are added together. If the result is greater than 8 bits (i.e., > 255,) VF is set to 1,
+    // otherwise 0. Only the lowest 8 bits of the result are kept, and stored in Vx.
+    pub fn opcode_add_vy(&mut self, x: usize, y: usize) -> OpcodeExec {
+        let r: u16 = self.v_reg[x] as u16 + self.v_reg[y] as u16; // add without overflow
+
+        // greater than 8 bits
+        if r > 255 {
+            self.v_reg[0xF] = 1;
+        } else {
+            self.v_reg[0xF] = 0;
+        }
+
+        self.v_reg[x] = r as u8;
+
+        Ok(format!("ADD vx{}, vy{}", x, y))
+    }
 }
 
 #[cfg(test)]
@@ -392,5 +412,34 @@ mod tests {
         chip_8.opcode_xor(x, y).unwrap();
 
         assert_eq!(chip_8.v_reg[x], 0b10011100);
+    }
+
+    #[test]
+    fn test_opcode_add_vy() {
+        let mut chip_8 = Chip8::default();
+        let x = 0;
+        let y = 10;
+
+        chip_8.opcode_ld(x, 255).unwrap();
+        chip_8.opcode_ld(y, 1).unwrap();
+
+        assert_eq!(chip_8.v_reg[0xF], 0);
+
+        chip_8.opcode_add_vy(x, y).unwrap();
+
+        // overflows
+        assert_eq!(chip_8.v_reg[x], 0);
+        assert_eq!(chip_8.v_reg[0xF], 1);
+
+        chip_8.opcode_ld(x, 254).unwrap();
+        chip_8.opcode_ld(y, 1).unwrap();
+
+        assert_eq!(chip_8.v_reg[0xF], 1);
+
+        chip_8.opcode_add_vy(x, y).unwrap();
+
+        // still fits in a u8
+        assert_eq!(chip_8.v_reg[x], 255);
+        assert_eq!(chip_8.v_reg[0xF], 0);
     }
 }

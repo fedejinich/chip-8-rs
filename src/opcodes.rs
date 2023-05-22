@@ -4,20 +4,21 @@ pub type OpcodeExec = Result<String, String>;
 
 pub enum Opcode {
     ERROR(String),
-    CLS,                // CLS
-    RET,                // RET
-    SYS(u16),           // SYS addr
-    JP(u16),            // JP addr
-    CALL(u16),          // CALL addr
-    SE(usize, u8),      // SE Vx, byte
-    SNE(usize, u8),     // SNE Vx, byte
-    SEVy(usize, usize), // SE Vx Vy
-    LD(usize, u8),      // LD Vx, byte
-    ADD(usize, u8),     // ADD Vx, byte
-    LDVy(usize, usize), // LD Vx, Vy
-    OR(usize, usize),   // OR Vx, Vy
-    AND(usize, usize),  // AND Vx, Vy
-    XOR(usize, usize),  // XOR Vx, Vy
+    CLS,                 // CLS
+    RET,                 // RET
+    SYS(u16),            // SYS addr
+    JP(u16),             // JP addr
+    CALL(u16),           // CALL addr
+    SE(usize, u8),       // SE Vx, byte
+    SNE(usize, u8),      // SNE Vx, byte
+    SEVy(usize, usize),  // SE Vx Vy
+    LD(usize, u8),       // LD Vx, byte
+    ADD(usize, u8),      // ADD Vx, byte
+    LDVy(usize, usize),  // LD Vx, Vy
+    OR(usize, usize),    // OR Vx, Vy
+    AND(usize, usize),   // AND Vx, Vy
+    XOR(usize, usize),   // XOR Vx, Vy
+    ADDVy(usize, usize), // XOR Vx, Vy
 }
 
 // todo(fedejinich) add unit test for this
@@ -50,6 +51,7 @@ pub fn match_opcode(op: u16) -> Opcode {
         (0x8, _, _, 1) => Opcode::OR(n2, n3),
         (0x8, _, _, 2) => Opcode::AND(n2, n3),
         (0x8, _, _, 3) => Opcode::XOR(n2, n3),
+        (0x8, _, _, 4) => Opcode::ADDVy(n2, n3),
         (_, _, _, _) => Opcode::ERROR(format!("Unimplemented opcode: {}", op)),
     };
 
@@ -81,6 +83,7 @@ impl Opcode {
             Opcode::OR(vx, vy) => chip_8.opcode_or(*vx, *vy),
             Opcode::AND(vx, vy) => chip_8.opcode_and(*vx, *vy),
             Opcode::XOR(vx, vy) => chip_8.opcode_xor(*vx, *vy),
+            Opcode::ADDVy(vx, vy) => chip_8.opcode_add_vy(*vx, *vy),
             Opcode::ERROR(e) => Err(e.clone()),
         }
     }
