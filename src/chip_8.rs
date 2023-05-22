@@ -416,17 +416,19 @@ mod tests {
     #[test]
     fn test_opcode_ld_vy() {
         let mut chip_8 = Chip8::default();
+        let x = 0;
+        let y = 1;
 
-        chip_8.opcode_ld(0, 0b01010101).unwrap();
-        chip_8.opcode_ld(1, 0b11111111).unwrap();
+        chip_8.opcode_ld(x, 0b01010101).unwrap();
+        chip_8.opcode_ld(y, 0b11111111).unwrap();
 
-        assert_eq!(chip_8.v_reg[0], 0b01010101);
-        assert_eq!(chip_8.v_reg[1], 0b11111111);
+        assert_eq!(chip_8.v_reg[x], 0b01010101);
+        assert_eq!(chip_8.v_reg[y], 0b11111111);
 
-        chip_8.opcode_ld_vy(0, 1).unwrap();
+        chip_8.opcode_ld_vy(x, y).unwrap();
 
-        assert_eq!(chip_8.v_reg[0], 0b11111111);
-        assert_eq!(chip_8.v_reg[1], 0b11111111);
+        assert_eq!(chip_8.v_reg[x], 0b11111111);
+        assert_eq!(chip_8.v_reg[y], 0b11111111);
     }
 
     #[test]
