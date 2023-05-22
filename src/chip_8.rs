@@ -282,7 +282,7 @@ impl Chip8 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::assert_eq;
+    use std::{assert_eq, println};
 
     #[test]
     fn test_load_program() {
@@ -599,5 +599,95 @@ mod tests {
         chip_8.opcode_sne_vy(x, y).unwrap();
 
         assert_eq!(chip_8.pc, PROGRAM_START_ADDRESS + 2);
+    }
+
+    #[test]
+    fn test_opcode_ld_1() {
+        println!("should be implemented");
+        assert!(false)
+    }
+
+    #[test]
+    fn test_opcode_jp_v0() {
+        println!("should be implemented");
+        assert!(false)
+    }
+
+    #[test]
+    fn test_opcode_rnd() {
+        println!("should be implemented");
+        assert!(false)
+    }
+
+    #[test]
+    fn test_opcode_drw() {
+        println!("should be implemented");
+        assert!(false)
+    }
+
+    #[test]
+    fn test_opcode_skp() {
+        println!("should be implemented");
+        assert!(false)
+    }
+
+    #[test]
+    fn test_opcode_sknp() {
+        println!("should be implemented");
+        assert!(false)
+    }
+
+    #[test]
+    fn test_opcode_ld_vx_dt() {
+        println!("should be implemented");
+        assert!(false)
+    }
+
+    #[test]
+    fn test_opcode_ld_vx_k() {
+        println!("should be implemented");
+        assert!(false)
+    }
+
+    #[test]
+    fn test_opcode_ld_dt_vx() {
+        println!("should be implemented");
+        assert!(false)
+    }
+
+    #[test]
+    fn test_opcode_ld_st_vx() {
+        println!("should be implemented");
+        assert!(false)
+    }
+
+    #[test]
+    fn test_opcode_add_1_vx() {
+        println!("should be implemented");
+        assert!(false)
+    }
+
+    #[test]
+    fn test_opcode_ld_f_vx() {
+        println!("should be implemented");
+        assert!(false)
+    }
+
+    #[test]
+    fn test_opcode_ld_b_vx() {
+        println!("should be implemented");
+        assert!(false)
+    }
+
+    #[test]
+    fn test_opcode_ld_1_vx() {
+        println!("should be implemented");
+        assert!(false)
+    }
+
+    #[test]
+    fn test_opcode_ld_vx_1() {
+        println!("should be implemented");
+        assert!(false)
     }
 }
