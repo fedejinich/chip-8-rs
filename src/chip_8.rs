@@ -210,18 +210,25 @@ impl Chip8 {
     // The values of Vx and Vy are added together. If the result is greater than 8 bits (i.e., > 255,) VF is set to 1,
     // otherwise 0. Only the lowest 8 bits of the result are kept, and stored in Vx.
     pub fn opcode_add_vy(&mut self, x: usize, y: usize) -> OpcodeExec {
-        let r: u16 = self.v_reg[x] as u16 + self.v_reg[y] as u16; // add without overflow
+        let (res, overflow) = self.v_reg[x].overflowing_add(self.v_reg[y]);
+        let vf = if overflow { 1 } else { 0 };
 
-        // greater than 8 bits
-        if r > 255 {
-            self.v_reg[0xF] = 1;
-        } else {
-            self.v_reg[0xF] = 0;
-        }
-
-        self.v_reg[x] = r as u8;
+        self.v_reg[x] = res;
+        self.v_reg[0xF] = vf;
 
         Ok(format!("ADD vx{}, vy{}", x, y))
+    }
+
+    // Set Vx = Vx - Vy, set VF = NOT borrow.
+    // If Vx > Vy, then VF is set to 1, otherwise 0. Then Vy is subtracted from Vx, and the results stored in Vx.
+    pub fn opcode_sub(&mut self, x: usize, y: usize) -> OpcodeExec {
+        let (new_vx, borrow) = self.v_reg[x].overflowing_sub(self.v_reg[y]);
+        let new_vf = if borrow { 0 } else { 1 };
+
+        self.v_reg[x] = new_vx;
+        self.v_reg[0xF] = new_vf;
+
+        Ok(format!("SUB vx{}, vy{}", x, y))
     }
 }
 
@@ -441,5 +448,34 @@ mod tests {
         // still fits in a u8
         assert_eq!(chip_8.v_reg[x], 255);
         assert_eq!(chip_8.v_reg[0xF], 0);
+    }
+
+    #[test]
+    fn test_opcode_sub() {
+        let mut chip_8 = Chip8::default();
+        let x = 0;
+        let y = 2;
+
+        chip_8.opcode_ld(x, 3).unwrap();
+        chip_8.opcode_ld(y, 1).unwrap();
+
+        assert_eq!(chip_8.v_reg[0xF], 0);
+
+        chip_8.opcode_sub(x, y).unwrap();
+
+        // normal sub
+        assert_eq!(chip_8.v_reg[0xF], 1);
+        assert_eq!(chip_8.v_reg[x], 2);
+
+        chip_8.opcode_ld(x, 1).unwrap();
+        chip_8.opcode_ld(y, 3).unwrap();
+
+        assert_eq!(chip_8.v_reg[0xF], 1);
+
+        chip_8.opcode_sub(x, y).unwrap();
+
+        // overflows
+        assert_eq!(chip_8.v_reg[0xF], 0);
+        assert_eq!(chip_8.v_reg[x], 254);
     }
 }
