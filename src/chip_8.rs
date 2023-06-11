@@ -83,7 +83,7 @@ impl Chip8 {
         // todo(fedejinich) no error handling, what happens when there's nothing left?
         self.stack_pointer -= 1;
         self.stack[self.stack_pointer as usize]
-    }
+    } 
 
     fn pc(&mut self, pc: &u16) {
         // todo(fedejinich) no error handling, should restrict pc to fit in memory range?
@@ -138,7 +138,7 @@ impl Chip8 {
             self.pc_inc();
             self.pc_inc();
         }
-        Ok(format!("SE v{}, {}", x, kk))
+        Ok(format!("SE {}, {}", x, kk))
     }
 
     // Skip next instruction if Vx != kk.
@@ -148,7 +148,7 @@ impl Chip8 {
             self.pc_inc();
             self.pc_inc();
         }
-        Ok(format!("SNE v{}, {}", x, kk))
+        Ok(format!("SNE {}, {}", x, kk))
     }
 
     // Skip next instruction if Vx = Vy.
@@ -158,28 +158,28 @@ impl Chip8 {
             self.pc_inc();
             self.pc_inc();
         }
-        Ok(format!("SE vx{} vy{}", x, y))
+        Ok(format!("SE {} {}", x, y))
     }
 
     // Set Vx = kk.
     // The interpreter puts the value kk into register Vx.
     pub fn opcode_ld(&mut self, x: usize, kk: u8) -> OpcodeExec {
         self.v_reg[x] = kk;
-        Ok(format!("LD vx{} {}", x, kk))
+        Ok(format!("LD {} {}", x, kk))
     }
 
     // Set Vx = Vx + kk.
     // Adds the value kk to the value of register Vx, then stores the result in Vx.
     pub fn opcode_add(&mut self, x: usize, kk: u8) -> OpcodeExec {
         self.v_reg[x] = self.v_reg[x] + kk;
-        Ok(format!("ADD vx{} {}", x, kk))
+        Ok(format!("ADD {} {}", x, kk))
     }
 
     // Set Vx = Vy.
     // Stores the value of register Vy in register Vx.
     pub fn opcode_ld_vy(&mut self, x: usize, y: usize) -> OpcodeExec {
         self.v_reg[x] = self.v_reg[y];
-        Ok(format!("LD vx{}, vy{}", x, y))
+        Ok(format!("LD {}, {}", x, y))
     }
 
     // Set Vx = Vx OR Vy.
@@ -188,7 +188,7 @@ impl Chip8 {
     // then the same bit in the result is also 1. Otherwise, it is 0.
     pub fn opcode_or(&mut self, x: usize, y: usize) -> OpcodeExec {
         self.v_reg[x] = self.v_reg[x] | self.v_reg[y];
-        Ok(format!("OR vx{}, vy{}", x, y))
+        Ok(format!("OR {}, {}", x, y))
     }
 
     // Set Vx = Vx AND Vy.
@@ -197,7 +197,7 @@ impl Chip8 {
     // then the same bit in the result is also 1. Otherwise, it is 0.
     pub fn opcode_and(&mut self, x: usize, y: usize) -> OpcodeExec {
         self.v_reg[x] = self.v_reg[x] & self.v_reg[y];
-        Ok(format!("AND vx{}, vy{}", x, y))
+        Ok(format!("AND {}, {}", x, y))
     }
 
     // Set Vx = Vx XOR Vy.
@@ -206,7 +206,7 @@ impl Chip8 {
     // then the corresponding bit in the result is set to 1. Otherwise, it is 0.
     pub fn opcode_xor(&mut self, x: usize, y: usize) -> OpcodeExec {
         self.v_reg[x] = self.v_reg[x] ^ self.v_reg[y];
-        Ok(format!("XOR vx{}, vy{}", x, y))
+        Ok(format!("XOR {}, {}", x, y))
     }
 
     // Set Vx = Vx + Vy, set VF = carry.
@@ -219,7 +219,7 @@ impl Chip8 {
         self.v_reg[x] = res;
         self.v_reg[0xF] = vf;
 
-        Ok(format!("ADD vx{}, vy{}", x, y))
+        Ok(format!("ADD {}, {}", x, y))
     }
 
     // Set Vx = Vx - Vy, set VF = NOT borrow.
@@ -231,7 +231,7 @@ impl Chip8 {
         self.v_reg[x] = new_vx;
         self.v_reg[0xF] = new_vf;
 
-        Ok(format!("SUB vx{}, vy{}", x, y))
+        Ok(format!("SUB {}, {}", x, y))
     }
 
     // Set Vx = Vx SHR 1.
@@ -242,7 +242,7 @@ impl Chip8 {
         self.v_reg[0xF] = least;
         self.v_reg[x] >>= 1; // this is equal to /2
 
-        Ok(format!("SHR vx{}", x))
+        Ok(format!("SHR {}", x))
     }
 
     // Set Vx = Vy - Vx, set VF = NOT borrow.
@@ -254,7 +254,7 @@ impl Chip8 {
         self.v_reg[x] = new_vx;
         self.v_reg[0xF] = new_vf;
 
-        Ok(format!("SUBN vx{}, vy{}", x, y))
+        Ok(format!("SUBN {}, {}", x, y))
     }
 
     // Set Vx = Vx SHL 1.
@@ -265,7 +265,7 @@ impl Chip8 {
         self.v_reg[0xF] = most;
         self.v_reg[x] <<= 1; // this is equal to *2
 
-        Ok(format!("SHL vx{}", x))
+        Ok(format!("SHL {}", x))
     }
 
     // Skip next instruction if Vx != Vy.
@@ -275,8 +275,17 @@ impl Chip8 {
             self.pc_inc();
             self.pc_inc();
         }
-        Ok(format!("SNE vx{}, vy{}", x, y))
+        Ok(format!("SNE {}, {}", x, y))
     }
+
+
+    // Set I = nnn.
+    // The value of register I is set to nnn.
+    pub fn opcode_ld_i(&mut self, nnn: u16) -> OpcodeExec {
+        self.i = nnn;
+        Ok(format!("LD I, {}", nnn))
+    }
+
 }
 
 #[cfg(test)]
