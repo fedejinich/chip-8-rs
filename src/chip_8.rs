@@ -1,4 +1,4 @@
-use std::format;
+use std::{fmt::format};
 
 use crate::opcodes::{fetch_op, match_opcode, OpcodeExec};
 
@@ -83,8 +83,9 @@ impl Chip8 {
         // todo(fedejinich) no error handling, what happens when there's nothing left?
         self.stack_pointer -= 1;
         self.stack[self.stack_pointer as usize]
-    } 
+    }
 
+    // todo(fedejinich) remove &u16
     fn pc(&mut self, pc: &u16) {
         // todo(fedejinich) no error handling, should restrict pc to fit in memory range?
         self.pc = pc.clone();
@@ -278,7 +279,6 @@ impl Chip8 {
         Ok(format!("SNE {}, {}", x, y))
     }
 
-
     // Set I = nnn.
     // The value of register I is set to nnn.
     pub fn opcode_ld_i(&mut self, nnn: u16) -> OpcodeExec {
@@ -286,6 +286,12 @@ impl Chip8 {
         Ok(format!("LD I, {}", nnn))
     }
 
+    // Jump to location nnn + V0.
+    // The program counter is set to nnn plus the value of V0
+    pub fn opcode_jp_v0(&mut self, nnn: u16) -> OpcodeExec {
+        self.pc(&(nnn + (self.v_reg[0] as u16)));
+        Ok(format!("JP V0 {}", nnn))
+    }
 }
 
 #[cfg(test)]
@@ -625,8 +631,14 @@ mod tests {
 
     #[test]
     fn test_opcode_jp_v0() {
-        println!("should be implemented");
-        assert!(false)
+        let mut chip_8 = Chip8::default();
+        chip_8.v_reg[0] = 3;
+
+        assert_eq!(chip_8.pc, PROGRAM_START_ADDRESS);
+
+        chip_8.opcode_jp_v0(5).unwrap();
+
+        assert_eq!(chip_8.pc, 8)
     }
 
     #[test]

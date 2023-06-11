@@ -27,6 +27,7 @@ pub enum Opcode {
     SHL(usize),          // SHL Vx
     SNEVy(usize, usize), // SNE Vx, Vy
     LDI(u16),            // LD I addr
+    JPV0(u16),           // JP V0 addr
 }
 
 // todo(fedejinich) add unit test for this
@@ -66,6 +67,7 @@ pub fn match_opcode(op: u16) -> Opcode {
         (0x8, _, _, 0xE) => Opcode::SHL(n2),
         (0x9, _, _, 0) => Opcode::SNEVy(n2, n3),
         (0xA, _, _, _) => Opcode::LDI(nnn_address(op)),
+        (0xB, _, _, _) => Opcode::JPV0(nnn_address(op)),
         (_, _, _, _) => Opcode::ERROR(format!("Unimplemented opcode: {}", op)),
     };
 
@@ -105,6 +107,7 @@ impl Opcode {
             Opcode::SHL(vx) => chip_8.opcode_shl(*vx),
             Opcode::SNEVy(vx, vy) => chip_8.opcode_sne_vy(*vx, *vy),
             Opcode::LDI(nnn) => chip_8.opcode_ld_i(*nnn),
+            Opcode::JPV0(nnn) => chip_8.opcode_jp_v0(*nnn),
             Opcode::ERROR(e) => Err(e.clone()),
         }
     }
