@@ -1,5 +1,3 @@
-use std::process::ChildStdout;
-
 use crate::chip_8::{Chip8, MEM_SIZE};
 
 pub type OpcodeExec = Result<String, String>;
@@ -28,6 +26,7 @@ pub enum Opcode {
     SNEVy(usize, usize), // SNE Vx, Vy
     LDI(u16),            // LD I addr
     JPV0(u16),           // JP V0 addr
+    RND(usize, u8),      // RND Vx, byte
 }
 
 // todo(fedejinich) add unit test for this
@@ -68,6 +67,7 @@ pub fn match_opcode(op: u16) -> Opcode {
         (0x9, _, _, 0) => Opcode::SNEVy(n2, n3),
         (0xA, _, _, _) => Opcode::LDI(nnn_address(op)),
         (0xB, _, _, _) => Opcode::JPV0(nnn_address(op)),
+        (0xC, _, _, _) => Opcode::RND(n2, kk(op)),
         (_, _, _, _) => Opcode::ERROR(format!("Unimplemented opcode: {}", op)),
     };
 
@@ -108,6 +108,7 @@ impl Opcode {
             Opcode::SNEVy(vx, vy) => chip_8.opcode_sne_vy(*vx, *vy),
             Opcode::LDI(nnn) => chip_8.opcode_ld_i(*nnn),
             Opcode::JPV0(nnn) => chip_8.opcode_jp_v0(*nnn),
+            Opcode::RND(vx, kk) => chip_8.opcode_rnd(*vx, *kk),
             Opcode::ERROR(e) => Err(e.clone()),
         }
     }

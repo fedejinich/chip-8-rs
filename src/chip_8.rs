@@ -1,6 +1,7 @@
-use std::{fmt::format};
+use std::println;
 
 use crate::opcodes::{fetch_op, match_opcode, OpcodeExec};
+use rand::Rng;
 
 const PROGRAM_START_ADDRESS: u16 = 0x200;
 
@@ -292,12 +293,22 @@ impl Chip8 {
         self.pc(&(nnn + (self.v_reg[0] as u16)));
         Ok(format!("JP V0 {}", nnn))
     }
+
+    // Set Vx = random byte AND kk.
+    // The interpreter generates a random number from 0 to 255, which is then ANDed with the value kk. The results are stored in Vx. 
+    pub fn opcode_rnd(&mut self, x: usize, kk: u8) -> OpcodeExec {
+        let rand: u8 = rand::thread_rng().gen();
+        let d = format!("rand{} kk{}", rand, kk);
+        println!("{}", d);
+        self.v_reg[x] = kk & rand;
+        Ok(format!("RND {}, {}", x, kk))
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::{assert_eq, println};
+    use std::{assert_eq, assert_ne, println};
 
     #[test]
     fn test_load_program() {
@@ -641,10 +652,16 @@ mod tests {
         assert_eq!(chip_8.pc, 8)
     }
 
+    // todo(fedejinich) this is a flaky test
     #[test]
     fn test_opcode_rnd() {
-        println!("should be implemented");
-        assert!(false)
+        let mut chip_8 = Chip8::default();
+
+        assert_eq!(chip_8.v_reg[0], 0);
+
+        chip_8.opcode_rnd(0, 8).unwrap();
+
+        assert_ne!(chip_8.v_reg[0], 0);
     }
 
     #[test]
