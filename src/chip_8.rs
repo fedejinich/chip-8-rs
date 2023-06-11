@@ -613,9 +613,14 @@ mod tests {
     }
 
     #[test]
-    fn test_opcode_ld_1() {
-        println!("should be implemented");
-        assert!(false)
+    fn test_opcode_ld_i() {
+        let mut chip_8 = Chip8::default();
+
+        assert_eq!(chip_8.i, 0);
+
+        chip_8.opcode_ld_i(8).unwrap();
+
+        assert_eq!(chip_8.i, 8);
     }
 
     #[test]

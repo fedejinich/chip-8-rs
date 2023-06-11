@@ -26,6 +26,7 @@ pub enum Opcode {
     SUBN(usize, usize),  // SUBN Vx, Vy
     SHL(usize),          // SHL Vx
     SNEVy(usize, usize), // SNE Vx, Vy
+    LDI(u16),            // LD I addr
 }
 
 // todo(fedejinich) add unit test for this
@@ -64,6 +65,7 @@ pub fn match_opcode(op: u16) -> Opcode {
         (0x8, _, _, 7) => Opcode::SUBN(n2, n3),
         (0x8, _, _, 0xE) => Opcode::SHL(n2),
         (0x9, _, _, 0) => Opcode::SNEVy(n2, n3),
+        (0xA, _, _, _) => Opcode::LDI(nnn_address(op)),
         (_, _, _, _) => Opcode::ERROR(format!("Unimplemented opcode: {}", op)),
     };
 
@@ -80,6 +82,7 @@ fn kk(op: u16) -> u8 {
 
 impl Opcode {
     pub fn execute_op(&self, chip_8: &mut Chip8) -> OpcodeExec {
+        // todo(fedejinich) avoid pasing pointers
         match self {
             Opcode::CLS => chip_8.opcode_cls(),
             Opcode::RET => chip_8.opcode_ret(),
@@ -100,7 +103,8 @@ impl Opcode {
             Opcode::SHR(vx) => chip_8.opcode_shr(*vx),
             Opcode::SUBN(vx, vy) => chip_8.opcode_subn(*vx, *vy),
             Opcode::SHL(vx) => chip_8.opcode_shl(*vx),
-            Opcode::SNEVy(vx,vy) => chip_8.opcode_sne_vy(*vx, *vy),
+            Opcode::SNEVy(vx, vy) => chip_8.opcode_sne_vy(*vx, *vy),
+            Opcode::LDI(nnn) => chip_8.opcode_ld_i(*nnn),
             Opcode::ERROR(e) => Err(e.clone()),
         }
     }
