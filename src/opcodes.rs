@@ -4,29 +4,30 @@ pub type OpcodeExec = Result<String, String>;
 
 pub enum Opcode {
     ERROR(String),
-    CLS,                 // CLS
-    RET,                 // RET
-    SYS(u16),            // SYS addr
-    JP(u16),             // JP addr
-    CALL(u16),           // CALL addr
-    SE(usize, u8),       // SE Vx, byte
-    SNE(usize, u8),      // SNE Vx, byte
-    SEVy(usize, usize),  // SE Vx Vy
-    LD(usize, u8),       // LD Vx, byte
-    ADD(usize, u8),      // ADD Vx, byte
-    LDVy(usize, usize),  // LD Vx, Vy
-    OR(usize, usize),    // OR Vx, Vy
-    AND(usize, usize),   // AND Vx, Vy
-    XOR(usize, usize),   // XOR Vx, Vy
-    ADDVy(usize, usize), // ADD Vx, Vy
-    SUB(usize, usize),   // SUB Vx, Vy
-    SHR(usize),          // SHR Vx
-    SUBN(usize, usize),  // SUBN Vx, Vy
-    SHL(usize),          // SHL Vx
-    SNEVy(usize, usize), // SNE Vx, Vy
-    LDI(u16),            // LD I addr
-    JPV0(u16),           // JP V0 addr
-    RND(usize, u8),      // RND Vx, byte
+    CLS,                   // CLS
+    RET,                   // RET
+    SYS(u16),              // SYS addr
+    JP(u16),               // JP addr
+    CALL(u16),             // CALL addr
+    SE(usize, u8),         // SE Vx, byte
+    SNE(usize, u8),        // SNE Vx, byte
+    SEVy(usize, usize),    // SE Vx Vy
+    LD(usize, u8),         // LD Vx, byte
+    ADD(usize, u8),        // ADD Vx, byte
+    LDVy(usize, usize),    // LD Vx, Vy
+    OR(usize, usize),      // OR Vx, Vy
+    AND(usize, usize),     // AND Vx, Vy
+    XOR(usize, usize),     // XOR Vx, Vy
+    ADDVy(usize, usize),   // ADD Vx, Vy
+    SUB(usize, usize),     // SUB Vx, Vy
+    SHR(usize),            // SHR Vx
+    SUBN(usize, usize),    // SUBN Vx, Vy
+    SHL(usize),            // SHL Vx
+    SNEVy(usize, usize),   // SNE Vx, Vy
+    LDI(u16),              // LD I addr
+    JPV0(u16),             // JP V0 addr
+    RND(usize, u8),        // RND Vx, byte
+    DRW(usize, usize, u16), // DRW Vx, Vy, nibble
 }
 
 // todo(fedejinich) add unit test for this
@@ -68,6 +69,7 @@ pub fn match_opcode(op: u16) -> Opcode {
         (0xA, _, _, _) => Opcode::LDI(nnn_address(op)),
         (0xB, _, _, _) => Opcode::JPV0(nnn_address(op)),
         (0xC, _, _, _) => Opcode::RND(n2, kk(op)),
+        (0xD, _,_,_) => Opcode::DRW(n2, n3, n4),
         (_, _, _, _) => Opcode::ERROR(format!("Unimplemented opcode: {}", op)),
     };
 
@@ -109,6 +111,7 @@ impl Opcode {
             Opcode::LDI(nnn) => chip_8.opcode_ld_i(*nnn),
             Opcode::JPV0(nnn) => chip_8.opcode_jp_v0(*nnn),
             Opcode::RND(vx, kk) => chip_8.opcode_rnd(*vx, *kk),
+            Opcode::DRW(vx,vy, nibble) => chip_8.opcode_drw(*vx, *vy, *nibble),
             Opcode::ERROR(e) => Err(e.clone()),
         }
     }

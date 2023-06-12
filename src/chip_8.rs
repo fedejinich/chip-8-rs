@@ -1,4 +1,4 @@
-use std::println;
+use std::{fmt::format, println};
 
 use crate::opcodes::{fetch_op, match_opcode, OpcodeExec};
 use rand::Rng;
@@ -295,13 +295,24 @@ impl Chip8 {
     }
 
     // Set Vx = random byte AND kk.
-    // The interpreter generates a random number from 0 to 255, which is then ANDed with the value kk. The results are stored in Vx. 
+    // The interpreter generates a random number from 0 to 255, which is then ANDed with the value kk. The results are stored in Vx.
     pub fn opcode_rnd(&mut self, x: usize, kk: u8) -> OpcodeExec {
         let rand: u8 = rand::thread_rng().gen();
         let d = format!("rand{} kk{}", rand, kk);
         println!("{}", d);
         self.v_reg[x] = kk & rand;
         Ok(format!("RND {}, {}", x, kk))
+    }
+
+    // Display n-byte sprite starting at memory location I at (Vx, Vy), set VF = collision.
+    // The interpreter reads n bytes from memory, starting at the address stored in I.
+    // These bytes are then displayed as sprites on screen at coordinates (Vx, Vy).
+    // Sprites are XORed onto the existing screen. If this causes any pixels to be erased, VF is set to 1, otherwise it is set to 0.
+    // If the sprite is positioned so part of it is outside the coordinates of the display, it wraps around to the opposite
+    // side of the screen. 
+    pub fn opcode_drw(&mut self, x: usize, y: usize, nibble: u16) -> OpcodeExec {
+        panic!("should be implemented");
+        Ok(format!("DRW {}, {}, {}", x, y, nibble))
     }
 }
 
