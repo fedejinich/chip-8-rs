@@ -1,4 +1,4 @@
-use std::{fmt::format, println};
+use std::{fmt::format, num, println};
 
 use crate::opcodes::{fetch_op, match_opcode, OpcodeExec};
 use rand::Rng;
@@ -295,7 +295,8 @@ impl Chip8 {
     }
 
     // Set Vx = random byte AND kk.
-    // The interpreter generates a random number from 0 to 255, which is then ANDed with the value kk. The results are stored in Vx.
+    // The interpreter generates a random number from 0 to 255, which is then
+    // ANDed with the value kk. The results are stored in Vx.
     pub fn opcode_rnd(&mut self, x: usize, kk: u8) -> OpcodeExec {
         let rand: u8 = rand::thread_rng().gen();
         let d = format!("rand{} kk{}", rand, kk);
@@ -304,15 +305,47 @@ impl Chip8 {
         Ok(format!("RND {}, {}", x, kk))
     }
 
-    // Display n-byte sprite starting at memory location I at (Vx, Vy), set VF = collision.
-    // The interpreter reads n bytes from memory, starting at the address stored in I.
-    // These bytes are then displayed as sprites on screen at coordinates (Vx, Vy).
-    // Sprites are XORed onto the existing screen. If this causes any pixels to be erased, VF is set to 1, otherwise it is set to 0.
-    // If the sprite is positioned so part of it is outside the coordinates of the display, it wraps around to the opposite
-    // side of the screen. 
-    pub fn opcode_drw(&mut self, x: usize, y: usize, nibble: u16) -> OpcodeExec {
-        panic!("should be implemented");
-        Ok(format!("DRW {}, {}, {}", x, y, nibble))
+    // Display n-byte sprite starting at memory location I at (Vx, Vy),
+    // set VF = collision. The interpreter reads n bytes from memory, starting
+    // at the address stored in I. These bytes are then displayed as sprites
+    // on screen at coordinates (Vx, Vy). Sprites are XORed onto the existing
+    // screen. If this causes any pixels to be erased, VF is set to 1,
+    // otherwise it is set to 0. If the sprite is positioned so part of it is
+    // outside the coordinates of the display, it wraps around to the opposite
+    // side of the screen.
+    pub fn opcode_drw(&mut self, x_coord: usize, y_coord: usize, num_rows: u16) -> OpcodeExec {
+        // Keep track if any pixels were flipped
+        let mut flipped = false;
+        // Iterate over each row of our sprite
+        for y_line in 0..num_rows {
+            // Determine which memory address our row's data is stored
+            let addr = self.i + y_line as u16;
+            let pixels = self.memory[addr as usize];
+            // Iterate over each column in our row
+            for x_line in 0..8 {
+                // Use a mask to fetch current pixel's bit. Only flip if a 1
+                if (pixels & (0b1000_0000 >> x_line)) != 0 {
+                    // Sprites should wrap around screen, so apply modulo
+                    let x = (x_coord + x_line as usize) as usize % SCREEN_WIDTH;
+                    let y = (y_coord + y_line as usize) as usize % SCREEN_HEIGTH;
+
+                    // Get our pixel's index for our 1D screen array
+                    let idx = x + SCREEN_WIDTH * y;
+                    // Check if we're about to flip the pixel and set
+                    flipped |= self.display[idx];
+                    self.display[idx] ^= true;
+                }
+            }
+        }
+
+        // Populate VF register
+        if flipped {
+            self.v_reg[0xF] = 1;
+        } else {
+            self.v_reg[0xF] = 0;
+        }
+
+        Ok(format!("DRW x{} y{} {}", x_coord, y_coord, num_rows))
     }
 }
 
@@ -329,6 +362,7 @@ mod tests {
 
         let start = PROGRAM_START_ADDRESS as usize;
         let end = start + program.len();
+
         assert_eq!(program, chip_8.memory[start..end]);
     }
 
